@@ -151,7 +151,8 @@ FROM #PercentPopulationVaccinated
 
 -- Creating Views to Store data for later visualizations
 
-Create View PercentPopulationVaccinated as
+--viewing Rolling count of People Vaccinated per Country
+Create View RollingCountOfPeopleVaccinated as
 SELECT dea.continent, dea.location, dea.date, dea.population, vac.new_vaccinations
 ,	SUM(CONVERT(int, vac.new_vaccinations)) OVER (Partition by dea.Location Order by dea.Location, 
 	dea.Date) as RollingPeopleVaccinated
@@ -162,8 +163,8 @@ Join PortfolioProject..CovidVaccinations vac
 	and dea.date = vac.date
 WHERE dea.continent is not null
 --order by 2,3
+--select * from RollingCountOfPeopleVaccinated
 
---select * from PercentPopulationVaccinated
 
 --Create View HighestDeathCountPerPopulation as
 --SELECT Continent, MAX(total_deaths) as TotalDeathCount
@@ -174,7 +175,7 @@ WHERE dea.continent is not null
 --DROP VIEW highestdeathcountperpopulation
 
 
--- Looking at Continents with the Highest Death Count per Population
+--viewing Continents with the Highest Death Count per Population
 Create View ContinentsHighestDeathCountPerPopulation as
 SELECT Continent, MAX(total_deaths) as TotalDeathCount
 FROM PortfolioProject..CovidDeaths
@@ -182,7 +183,7 @@ Where continent is not null
 Group By Continent
 --select * from ContinentsHighestDeathCountPerPopulation
 
--- Looking at Countries with the Highest Death Count per Population
+--viewing Countries with the Highest Death Count per Population
 Create View CountriesHighestDeathCountPerPopulation as
 SELECT Location, MAX(total_deaths) as TotalDeathCount
 FROM PortfolioProject..CovidDeaths
@@ -192,7 +193,7 @@ Group By Location
 
 
 
--- Looking at Countries with Highest Infection Rate compared to Population
+--viewing Countries with Highest Infection Rate compared to Population
 CREATE VIEW CountriesHighestInfectionRatePerPopulation as
 SELECT Location, population, MAX(total_cases) AS HighestInfectionCount, Max(total_cases/population) * 100.0 AS 
 PercentPopulationInfected
