@@ -1,0 +1,141 @@
+--looking at name and dob of patients
+select first
+	,last
+	,birthdate
+from flushots..patients
+
+
+-- viewing list of encounter classes
+select distinct encounterclass
+from flushots..encounters
+
+
+-- showing all encounters in the year 2023 where the encounter class was 'inpatient' and description was 'icu admission'
+select * 
+from flushots..encounters
+where encounterclass = 'inpatient'
+	and description = 'icu admission'
+	and stop between '2023-01-01 00:00:00' and '2023-12-31 23:59:59'
+	-- alternatively: stop >= '2023-01-01 00:00:00' and stop <= '2023-12-31 23:59:59'
+
+
+-- encounters where the encounter class was either 'outpatient' or 'ambulatory'
+select * 
+from flushots..encounters
+where encounterclass in ('outpatient','ambulatory')
+	-- alternatively: where encounterclass = 'outpatient' or encounterclass = 'ambulatory'\
+
+
+-- a dr says 'i want to know all the descriptions that ever happened and how many occurrences of each
+--- we had in our patient population, in descending order'
+select description
+	,count(*) as count_of_condition
+from flushots..conditions 
+group by description 
+	order by count(*) desc
+
+
+-- if the physician wants to see only counts of over 3000 
+select description
+	,count(*) as count_of_condition
+from flushots..conditions 
+group by description 
+having count(*) > 3000
+	order by count(*) desc
+
+
+-- if physician also wants a certain description excluded
+select description
+	,count(*) as count_of_condition
+from flushots..conditions 
+where description != 'Body Mass Index 30.0-30.9, adult'
+group by description 
+having count(*) > 3000
+	order by count(*) desc
+
+
+-- write a query selecting all patients from boston
+select *
+from flushots..patients
+where city = 'boston'
+
+
+-- a dr is interested in every single time where someone was diagnosed with chronic kidney disease.
+--- the dr provides you with the icd9 codes 585.1, 585.2, 585.3, 585.4
+select * 
+from flushots..conditions
+where code in ('585.1','585.2','585.3','585.4')
+
+
+-- a provider asks me to write a query that does the following:
+-- 1. lists out number of patients per city in desc order
+-- 2. does not include boston
+-- 3. must have at least 100 patients from that city
+
+
+-- This query gives me the count of all patients from their city of residence, in descending order
+-- There must have been at least 100 patients in that city
+-- Cities do not include Boston
+select city
+	, count(*) as patients_in_city
+from flushots..patients
+where city != 'Boston'
+group by city
+having count(*) >= 100
+	order by count(*) desc
+
+
+-- using Left Join to look at patients who have received vaccinations
+select imm.patient
+	,pat.first
+	,pat.last
+	,imm.description
+from flushots..patients as pat
+left join flushots..immunizations as imm
+	on pat.id = imm.patient
+
+
+-- using Inner Join to only look at patients named Julia who have received vaccinations
+select imm.patient
+	,pat.first
+	,pat.last
+	,imm.description
+from flushots..patients as pat
+inner join flushots..immunizations as imm
+	on pat.id = imm.patient
+	and pat.first = 'Julia'
+
+
+/* 
+Working with one-to-many relationships  
+*/
+
+-- determining whether the patient id is uniquely identifiable and therefore a candidate 
+--- for the primary key
+select id, count (*)
+from flushots..patients
+group by id
+	order by count(*) desc
+
+
+-- showing number of repetitions of the foreign key
+select patient, count (*)
+from flushots..immunizations
+group by patient
+	order by count(*) desc
+
+
+-- showing patients who received covid vaccinations, ensuring there are no duplicates
+select distinct t1.id
+	, t1.first
+	, t1.last
+	--, t2.date
+	, t2.description as vaccine_name
+from flushots..patients as t1
+inner join flushots..immunizations as t2
+	on t1.id = t2.patient
+where lower(t2.description) like '%covid%'
+
+
+
+
